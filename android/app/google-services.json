@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "726203508641",
+    "project_id": "gpstore-user-app",
+    "storage_bucket": "gpstore-user-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:726203508641:android:2fecac1f554a1a9e1b8de0",
+        "android_client_info": {
+          "package_name": "com.gps.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "726203508641-ctsfo1v75k3ep825v7a4vivn5bj8pq3i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gps.user",
+            "certificate_hash": "93d127635dce4b4f12992750680446d717609f4d"
+          }
+        },
+        {
+          "client_id": "726203508641-ac8blkf0adgoqoshl98m4nu8t4nd3khn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBty7g84mSDhaQAObAdICZMWDcl1qcF1-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "726203508641-ac8blkf0adgoqoshl98m4nu8t4nd3khn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
