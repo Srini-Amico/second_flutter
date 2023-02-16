@@ -7,12 +7,56 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:726203508641:android:22fbc40da3f7b9d11b8de0",
+        "android_client_info": {
+          "package_name": "com.example.first_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "726203508641-ac8blkf0adgoqoshl98m4nu8t4nd3khn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBty7g84mSDhaQAObAdICZMWDcl1qcF1-s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "726203508641-ac8blkf0adgoqoshl98m4nu8t4nd3khn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "726203508641-cgqk09d18vgbk9avnlheg7j7paosfob7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gps.user"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:726203508641:android:2fecac1f554a1a9e1b8de0",
         "android_client_info": {
           "package_name": "com.gps.user"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "726203508641-a4km5pnn5si82pc1tg012hfdvnhha0v5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gps.user",
+            "certificate_hash": "6c84c1219aa0ab3b45e104ccb54b038ab1a8b675"
+          }
+        },
         {
           "client_id": "726203508641-ctsfo1v75k3ep825v7a4vivn5bj8pq3i.apps.googleusercontent.com",
           "client_type": 1,
@@ -37,6 +81,13 @@
             {
               "client_id": "726203508641-ac8blkf0adgoqoshl98m4nu8t4nd3khn.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "726203508641-cgqk09d18vgbk9avnlheg7j7paosfob7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.gps.user"
+              }
             }
           ]
         }

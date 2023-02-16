@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
 void main() {
   runApp(const MyApp());
 }
@@ -17,15 +19,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -52,16 +45,60 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   WebViewController controller = WebViewController();
+  AndroidWebViewController platformController = AndroidWebViewController(AndroidWebViewControllerCreationParams());
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  FileSelectorParams fileSelectorParams = const FileSelectorParams(isCaptureEnabled: true, acceptTypes: ["image/png", "image/jpeg"], mode: FileSelectorMode.open);
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    platformController..setJavaScriptMode(JavaScriptMode.unrestricted)
+    ..setPlatformNavigationDelegate(AndroidNavigationDelegate(
+      const PlatformNavigationDelegateCreationParams()
+    )..setOnProgress((progress) {
+
+    })..setOnNavigationRequest((NavigationRequest navigationRequest){
+      if(navigationRequest.url.endsWith("/flutter-login")){
+        _googleSignIn.signIn().then((value){
+
+          value?.authentication.then((value1) async {
+            http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
+              'accessToken': value1.accessToken!
+            })).then((value) async{
+              var body = jsonDecode(value.body);
+              print(body);
+              if(value.statusCode == 200 && body["Status"] == "Success"){
+                // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
+                platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
+              }
+              else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
+                controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
+              }
+              else {
+                print(value);
+              }
+            }).catchError((onError){
+              print(onError);
+            });
+          }).catchError((onError){
+            print(onError);
+          });
+        }).catchError((onError){
+          print(onError);
+        });
+        return NavigationDecision.prevent;
+      }
+      return NavigationDecision.navigate;
+    }))
+    ..loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":""}));
+
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse("https://test.anystuff.rent"))
+      ..loadRequest(Uri.parse("https://test.anystuff.rent/profile"))
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
@@ -69,23 +106,67 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           onNavigationRequest: (NavigationRequest request) {
             if(request.url.endsWith("/flutter-login")){
+              _googleSignIn.signIn().then((value){
+
+                value?.authentication.then((value1) async {
+                  http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
+                    'accessToken': value1.accessToken!
+                  })).then((value) async{
+                    var body = jsonDecode(value.body);
+                    print(body);
+                    if(value.statusCode == 200 && body["Status"] == "Success"){
+                      // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
+                        platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
+                    }
+                    else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
+                      controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
+                    }
+                    else {
+                      print(value);
+                    }
+                  }).catchError((onError){
+                    print(onError);
+                  });
+
+                  // AuthCredential authCredential = GoogleAuthProvider.credential(
+                  //   accessToken: value1.accessToken,
+                  //   idToken: value1.idToken
+                  // );
+
+                  // FirebaseApp firebaseApp = await Firebase.initializeApp(
+                  //   options: DefaultFirebaseOptions.currentPlatform,
+                  // );
+                  // FirebaseAuth auth = FirebaseAuth.instance;
+                  // auth.signInWithCredential(authCredential).then((value) async{
+                  //   print(value);
+                  //   User user = auth.currentUser!;
+                  //   print(user);
+                  //   String token = await user.getIdToken();
+                  //   print(token);
+                  //   Map<String, String?> headers = new Map();
+                  //   Map<String, String?> body = new Map();
+                  //   body["token"] = token;
+                  //   http.post(Uri.parse("https://test.anystuff.rent/google-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(body)).then((value){
+                  //     print(value);
+                  //   }).catchError((onError){
+                  //     print(onError);
+                  //   });
+                  // }).catchError((onError){
+                  //   print(onError);
+                  // });
+
+                }).catchError((onError){
+                  print(onError);
+                });
+              }).catchError((onError){
+                print(onError);
+              });
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;
           }
         )
       );
-  }
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
   }
 
   @override
@@ -97,7 +178,12 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      body: WebViewWidget(controller: controller,), // This trailing comma makes auto-formatting nicer for build methods.
+      appBar: AppBar(
+        title: const Text(""),
+        toolbarHeight: 0,
+        backgroundColor: Colors.transparent,
+      ),
+      body: PlatformWebViewWidget(PlatformWebViewWidgetCreationParams(controller: platformController)).build(context), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

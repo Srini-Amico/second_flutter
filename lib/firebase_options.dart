@@ -17,7 +17,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -46,18 +49,9 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAKFYl7f8Y9uIzumwavFfCSFaI_fPeFmMw',
-    appId: '1:726203508641:web:686874951a93ecfe1b8de0',
-    messagingSenderId: '726203508641',
-    projectId: 'gpstore-user-app',
-    authDomain: 'gpstore-user-app.firebaseapp.com',
-    storageBucket: 'gpstore-user-app.appspot.com',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBty7g84mSDhaQAObAdICZMWDcl1qcF1-s',
-    appId: '1:726203508641:android:2fecac1f554a1a9e1b8de0',
+    appId: '1:726203508641:android:22fbc40da3f7b9d11b8de0',
     messagingSenderId: '726203508641',
     projectId: 'gpstore-user-app',
     storageBucket: 'gpstore-user-app.appspot.com',
@@ -65,12 +59,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCIcXxXKzVDKFujRlJWd_lqLfe4OBTMnos',
-    appId: '1:726203508641:ios:4465b87c03c0a5511b8de0',
+    appId: '1:726203508641:ios:5433870c19ea32011b8de0',
     messagingSenderId: '726203508641',
     projectId: 'gpstore-user-app',
     storageBucket: 'gpstore-user-app.appspot.com',
-    androidClientId: '726203508641-ctsfo1v75k3ep825v7a4vivn5bj8pq3i.apps.googleusercontent.com',
-    iosClientId: '726203508641-cgqk09d18vgbk9avnlheg7j7paosfob7.apps.googleusercontent.com',
-    iosBundleId: 'com.gps.user',
+    androidClientId: '726203508641-a4km5pnn5si82pc1tg012hfdvnhha0v5.apps.googleusercontent.com',
+    iosClientId: '726203508641-k66lj87p963qnvpv4m7lphm4hhnd54l4.apps.googleusercontent.com',
+    iosBundleId: 'com.example.firstFlutter',
   );
 }
