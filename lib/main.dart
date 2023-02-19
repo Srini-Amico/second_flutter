@@ -1,9 +1,10 @@
 import 'dart:convert';
-
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+// import 'package:webview_flutter_android/webview_flutter_android.dart';
+// import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 void main() {
@@ -46,59 +47,71 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   WebViewController controller = WebViewController();
-  AndroidWebViewController platformController = AndroidWebViewController(AndroidWebViewControllerCreationParams());
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  FileSelectorParams fileSelectorParams = const FileSelectorParams(isCaptureEnabled: true, acceptTypes: ["image/png", "image/jpeg"], mode: FileSelectorMode.open);
+  Map<String, String> headers = new Map();
+  bool reload = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
-    platformController..setJavaScriptMode(JavaScriptMode.unrestricted)
-    ..setPlatformNavigationDelegate(AndroidNavigationDelegate(
-      const PlatformNavigationDelegateCreationParams()
-    )..setOnProgress((progress) {
+    if(defaultTargetPlatform == TargetPlatform.iOS){
+      _googleSignIn = GoogleSignIn(clientId: "726203508641-k66lj87p963qnvpv4m7lphm4hhnd54l4.apps.googleusercontent.com");
+    }
+    // flutter_webview_android_init();
+    flutter_webview_init();
+  }
 
-    })..setOnNavigationRequest((NavigationRequest navigationRequest){
-      if(navigationRequest.url.endsWith("/flutter-login")){
-        _googleSignIn.signIn().then((value){
+  // flutter_webview_android_init() {
+  //   platformController..setJavaScriptMode(JavaScriptMode.unrestricted)
+  //     ..setPlatformNavigationDelegate(AndroidNavigationDelegate(
+  //         const PlatformNavigationDelegateCreationParams()
+  //     )..setOnProgress((progress) {
+  //
+  //     })..setOnNavigationRequest((NavigationRequest navigationRequest){
+  //       if(navigationRequest.url.endsWith("/flutter-login")){
+  //         _googleSignIn.signIn().then((value){
+  //
+  //           value?.authentication.then((value1) async {
+  //             http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
+  //               'accessToken': value1.accessToken!
+  //             })).then((value) async{
+  //               var body = jsonDecode(value.body);
+  //               print(body);
+  //               if(value.statusCode == 200 && body["Status"] == "Success"){
+  //                 // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
+  //                 platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
+  //               }
+  //               else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
+  //                 controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
+  //               }
+  //               else {
+  //                 print(value);
+  //               }
+  //             }).catchError((onError){
+  //               print(onError);
+  //             });
+  //           }).catchError((onError){
+  //             print(onError);
+  //           });
+  //         }).catchError((onError){
+  //           print(onError);
+  //         });
+  //         return NavigationDecision.prevent;
+  //       }
+  //       return NavigationDecision.navigate;
+  //     }))
+  //     ..loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent")));
+  // }
 
-          value?.authentication.then((value1) async {
-            http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
-              'accessToken': value1.accessToken!
-            })).then((value) async{
-              var body = jsonDecode(value.body);
-              print(body);
-              if(value.statusCode == 200 && body["Status"] == "Success"){
-                // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
-                platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
-              }
-              else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
-                controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
-              }
-              else {
-                print(value);
-              }
-            }).catchError((onError){
-              print(onError);
-            });
-          }).catchError((onError){
-            print(onError);
-          });
-        }).catchError((onError){
-          print(onError);
-        });
-        return NavigationDecision.prevent;
-      }
-      return NavigationDecision.navigate;
-    }))
-    ..loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":""}));
-
+  flutter_webview_init(){
+    print(headers);
+    print("initiating");
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse("https://test.anystuff.rent/profile"))
+      ..loadRequest(Uri.parse("https://test.anystuff.rent/"))
       ..setNavigationDelegate(
         NavigationDelegate(
           onProgress: (int progress) {
@@ -115,11 +128,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     var body = jsonDecode(value.body);
                     print(body);
                     if(value.statusCode == 200 && body["Status"] == "Success"){
-                      // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
-                        platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
+                      // setState(() {
+                      //   headers = {"sid":body["sid"]};
+                      // });
+                      headers = {"sid":body["sid"]};
+                        reload = true;
+                        controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
+                        reload = false;
                     }
                     else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
-                      controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
+                      controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"), headers: {});
                     }
                     else {
                       print(value);
@@ -163,6 +181,19 @@ class _MyHomePageState extends State<MyHomePage> {
               });
               return NavigationDecision.prevent;
             }
+            else if(headers["sid"] != null){
+              print(headers["sid"]);
+              if(!reload) {
+                print("setting headers");
+                reload = true;
+                controller.loadRequest(
+                    Uri.parse(request.url), headers: headers);
+              }
+              else{
+                reload = false;
+              }
+            }
+            // controller.loadRequest(Uri.parse(request.url), headers: headers);
             return NavigationDecision.navigate;
           }
         )
@@ -171,19 +202,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         title: const Text(""),
         toolbarHeight: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: PlatformWebViewWidget(PlatformWebViewWidgetCreationParams(controller: platformController)).build(context), // This trailing comma makes auto-formatting nicer for build methods.
+      // body: PlatformWebViewWidget(PlatformWebViewWidgetCreationParams(controller: platformController)).build(context),
+      body: WebViewWidget(controller: controller), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
