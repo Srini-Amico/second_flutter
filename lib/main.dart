@@ -1,12 +1,20 @@
 import 'dart:convert';
+import 'dart:core';
+import 'dart:io';
+import 'dart:async';
+import 'package:anystuff/add_product.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-// import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 // import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image/image.dart' as image;
+
 void main() {
   runApp(const MyApp());
 }
@@ -48,7 +56,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   WebViewController controller = WebViewController();
   GoogleSignIn _googleSignIn = GoogleSignIn();
-
+  AndroidWebViewController? myAndroidController;
   Map<String, String> headers = new Map();
   bool reload = false;
 
@@ -107,8 +115,6 @@ class _MyHomePageState extends State<MyHomePage> {
   // }
 
   flutter_webview_init(){
-    print(headers);
-    print("initiating");
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadRequest(Uri.parse("https://test.anystuff.rent/"))
@@ -118,6 +124,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
           },
           onNavigationRequest: (NavigationRequest request) {
+            if(request.url == "about:blank"){
+              return NavigationDecision.prevent;
+            }
             if(request.url.endsWith("/flutter-login")){
               _googleSignIn.signIn().then((value){
 
@@ -126,7 +135,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     'accessToken': value1.accessToken!
                   })).then((value) async{
                     var body = jsonDecode(value.body);
-                    print(body);
                     if(value.statusCode == 200 && body["Status"] == "Success"){
                       // setState(() {
                       //   headers = {"sid":body["sid"]};
@@ -182,22 +190,60 @@ class _MyHomePageState extends State<MyHomePage> {
               return NavigationDecision.prevent;
             }
             else if(headers["sid"] != null){
-              print(headers["sid"]);
               if(!reload) {
-                print("setting headers");
-                reload = true;
-                controller.loadRequest(
-                    Uri.parse(request.url), headers: headers);
+                  reload = true;
+                  controller.loadRequest(
+                      Uri.parse(request.url), headers: headers);
               }
               else{
                 reload = false;
               }
             }
-            // controller.loadRequest(Uri.parse(request.url), headers: headers);
             return NavigationDecision.navigate;
           }
         )
       );
+
+    if(defaultTargetPlatform == TargetPlatform.android){
+      myAndroidController = controller.platform as AndroidWebViewController;
+      myAndroidController?.setOnShowFileSelector( (params) async {
+        // Control and show your picker
+        // and return a list of Uris.
+        // ImagePicker imagePicker = ImagePicker();
+        // var image = await imagePicker.pickImage(source: ImageSource.gallery);
+        // var imageString = await image?.readAsString(encoding: base64);
+        // print(imageString);
+        // Future<List<String>> uriList = Future(() => [imageString!]);
+        // Future<List<String>> uriList = Future(() => [image!.path]);
+        // String imageString = base64Encode(await image!.readAsBytes());
+        // Future<List<String>> uriList = Future(() => [ "data:image/jpeg;base64,$imageString" ]);
+        // return uriList; // Uris
+
+        if (params.acceptTypes.any((type) => type == 'image/*')) {
+          final picker = ImagePicker();
+          final photo = await picker.pickImage(source: ImageSource.gallery);
+
+          if (photo == null) {
+            return [];
+          }
+
+          final imageData = await photo.readAsBytes();
+          final decodedImage = image.decodeImage(imageData)!;
+          final scaledImage = image.copyResize(decodedImage, width: 500);
+          final jpg = image.encodeJpg(scaledImage, quality: 90);
+
+          final filePath = (await getTemporaryDirectory()).uri.resolve(
+            './image_${DateTime.now().microsecondsSinceEpoch}.jpg',
+          );
+          final file = await File.fromUri(filePath).create(recursive: true);
+          await file.writeAsBytes(jpg, flush: true);
+
+          return [file.uri.toString()];
+        }
+
+        return [];
+      });
+    }
   }
 
   @override
