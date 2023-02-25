@@ -3,23 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>726203508641-si7mll5fv24pv6ock9b3kuilk3ut5qcj.apps.googleusercontent.com</string>
+	<string>668408229592-e21q95tl5st7ammncql5n11045ptrcfr.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.726203508641-si7mll5fv24pv6ock9b3kuilk3ut5qcj</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>726203508641-0f80oe37215thgbulceh5kq7k96psdeu.apps.googleusercontent.com</string>
+	<string>com.googleusercontent.apps.668408229592-e21q95tl5st7ammncql5n11045ptrcfr</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCIcXxXKzVDKFujRlJWd_lqLfe4OBTMnos</string>
+	<string>AIzaSyAbruWXZwEFmsDp8srOwelMhrecOoL5K2g</string>
 	<key>GCM_SENDER_ID</key>
-	<string>726203508641</string>
+	<string>668408229592</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.amico.anystuff</string>
+	<string>rent.anystuff</string>
 	<key>PROJECT_ID</key>
-	<string>gpstore-user-app</string>
+	<string>any-stuff-rent</string>
 	<key>STORAGE_BUCKET</key>
-	<string>gpstore-user-app.appspot.com</string>
+	<string>any-stuff-rent.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:726203508641:ios:0a932038547656471b8de0</string>
+	<string>1:668408229592:ios:2989755ac624fe1c2b31ad</string>
 </dict>
 </plist>

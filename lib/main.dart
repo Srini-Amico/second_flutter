@@ -1,19 +1,16 @@
 import 'dart:convert';
 import 'dart:core';
 import 'dart:io';
-import 'dart:async';
-import 'package:anystuff/add_product.dart';
-import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-// import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as image;
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 void main() {
   runApp(const MyApp());
@@ -57,19 +54,26 @@ class _MyHomePageState extends State<MyHomePage> {
   WebViewController controller = WebViewController();
   GoogleSignIn _googleSignIn = GoogleSignIn();
   AndroidWebViewController? myAndroidController;
-  Map<String, String> headers = new Map();
+  Map<String, String> headers = Map();
   bool reload = false;
+  bool internetFound = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
-    if(defaultTargetPlatform == TargetPlatform.iOS){
-      _googleSignIn = GoogleSignIn(clientId: "726203508641-k66lj87p963qnvpv4m7lphm4hhnd54l4.apps.googleusercontent.com");
+check_internet();
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      _googleSignIn = GoogleSignIn(
+          clientId: "726203508641-k66lj87p963qnvpv4m7lphm4hhnd54l4.apps.googleusercontent.com");
     }
     // flutter_webview_android_init();
-    flutter_webview_init();
+    flutterWebViewInit();
+  }
+
+  check_internet() async{
+    // internetFound = await InternetConnectionChecker().hasConnection;
   }
 
   // flutter_webview_android_init() {
@@ -114,99 +118,107 @@ class _MyHomePageState extends State<MyHomePage> {
   //     ..loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent")));
   // }
 
-  flutter_webview_init(){
+  flutterWebViewInit() {
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadRequest(Uri.parse("https://test.anystuff.rent/"))
       ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
+          NavigationDelegate(
+              onProgress: (int progress) {
 
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            if(request.url == "about:blank"){
-              return NavigationDecision.prevent;
-            }
-            if(request.url.endsWith("/flutter-login")){
-              _googleSignIn.signIn().then((value){
+              },
+              onNavigationRequest: (NavigationRequest request) {
+                if (request.url == "about:blank") {
+                  return NavigationDecision.prevent;
+                }
+                if (request.url.endsWith("/flutter-login")) {
+                  _googleSignIn.signIn().then((value) {
+                    value?.authentication.then((value1) async {
+                      http.post(Uri.parse(
+                          "https://test.anystuff.rent/flutter-login"),
+                          headers: {"Content-Type": "application/json"},
+                          body: jsonEncode(<String, String>{
+                            'accessToken': value1.accessToken!
+                          })).then((value) async {
+                        var body = jsonDecode(value.body);
+                        if (value.statusCode == 200 &&
+                            body["Status"] == "Success") {
+                          // setState(() {
+                          //   headers = {"sid":body["sid"]};
+                          // });
+                          headers = {"sid": body["sid"]};
+                          reload = true;
+                          controller.loadRequest(
+                              Uri.parse("https://test.anystuff.rent"),
+                              headers: {"sid": body["sid"]});
+                          reload = false;
+                        }
+                        else if (value.statusCode == 400 &&
+                            body["message"] == "Invalid Email") {
+                          controller.loadRequest(
+                              Uri.parse("https://test.anystuff.rent/register"),
+                              headers: {});
+                        }
+                        else {
+                          print(value);
+                        }
+                      }).catchError((onError) {
+                        print(onError);
+                      });
 
-                value?.authentication.then((value1) async {
-                  http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
-                    'accessToken': value1.accessToken!
-                  })).then((value) async{
-                    var body = jsonDecode(value.body);
-                    if(value.statusCode == 200 && body["Status"] == "Success"){
-                      // setState(() {
-                      //   headers = {"sid":body["sid"]};
+                      // AuthCredential authCredential = GoogleAuthProvider.credential(
+                      //   accessToken: value1.accessToken,
+                      //   idToken: value1.idToken
+                      // );
+
+                      // FirebaseApp firebaseApp = await Firebase.initializeApp(
+                      //   options: DefaultFirebaseOptions.currentPlatform,
+                      // );
+                      // FirebaseAuth auth = FirebaseAuth.instance;
+                      // auth.signInWithCredential(authCredential).then((value) async{
+                      //   print(value);
+                      //   User user = auth.currentUser!;
+                      //   print(user);
+                      //   String token = await user.getIdToken();
+                      //   print(token);
+                      //   Map<String, String?> headers = new Map();
+                      //   Map<String, String?> body = new Map();
+                      //   body["token"] = token;
+                      //   http.post(Uri.parse("https://test.anystuff.rent/google-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(body)).then((value){
+                      //     print(value);
+                      //   }).catchError((onError){
+                      //     print(onError);
+                      //   });
+                      // }).catchError((onError){
+                      //   print(onError);
                       // });
-                      headers = {"sid":body["sid"]};
-                        reload = true;
-                        controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
-                        reload = false;
-                    }
-                    else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
-                      controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"), headers: {});
-                    }
-                    else {
-                      print(value);
-                    }
-                  }).catchError((onError){
+
+                    }).catchError((onError) {
+                      print(onError);
+                    });
+                  }).catchError((onError) {
                     print(onError);
                   });
-
-                  // AuthCredential authCredential = GoogleAuthProvider.credential(
-                  //   accessToken: value1.accessToken,
-                  //   idToken: value1.idToken
-                  // );
-
-                  // FirebaseApp firebaseApp = await Firebase.initializeApp(
-                  //   options: DefaultFirebaseOptions.currentPlatform,
-                  // );
-                  // FirebaseAuth auth = FirebaseAuth.instance;
-                  // auth.signInWithCredential(authCredential).then((value) async{
-                  //   print(value);
-                  //   User user = auth.currentUser!;
-                  //   print(user);
-                  //   String token = await user.getIdToken();
-                  //   print(token);
-                  //   Map<String, String?> headers = new Map();
-                  //   Map<String, String?> body = new Map();
-                  //   body["token"] = token;
-                  //   http.post(Uri.parse("https://test.anystuff.rent/google-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(body)).then((value){
-                  //     print(value);
-                  //   }).catchError((onError){
-                  //     print(onError);
-                  //   });
-                  // }).catchError((onError){
-                  //   print(onError);
-                  // });
-
-                }).catchError((onError){
-                  print(onError);
-                });
-              }).catchError((onError){
-                print(onError);
-              });
-              return NavigationDecision.prevent;
-            }
-            else if(headers["sid"] != null){
-              if(!reload) {
-                  reload = true;
-                  controller.loadRequest(
-                      Uri.parse(request.url), headers: headers);
+                  return NavigationDecision.prevent;
+                }
+                else if (headers["sid"] != null) {
+                  if (!reload) {
+                    reload = true;
+                    controller.loadRequest(
+                        Uri.parse(request.url), headers: headers);
+                  }
+                  else {
+                    reload = false;
+                  }
+                }
+                return NavigationDecision.navigate;
               }
-              else{
-                reload = false;
-              }
-            }
-            return NavigationDecision.navigate;
-          }
-        )
+          )
       );
 
-    if(defaultTargetPlatform == TargetPlatform.android){
+    if (defaultTargetPlatform == TargetPlatform.android) {
       myAndroidController = controller.platform as AndroidWebViewController;
-      myAndroidController?.setOnShowFileSelector( (params) async {
+      myAndroidController?.setOnShowFileSelector((params) async {
         // Control and show your picker
         // and return a list of Uris.
         // ImagePicker imagePicker = ImagePicker();
@@ -233,7 +245,9 @@ class _MyHomePageState extends State<MyHomePage> {
           final jpg = image.encodeJpg(scaledImage, quality: 90);
 
           final filePath = (await getTemporaryDirectory()).uri.resolve(
-            './image_${DateTime.now().microsecondsSinceEpoch}.jpg',
+            './image_${DateTime
+                .now()
+                .microsecondsSinceEpoch}.jpg',
           );
           final file = await File.fromUri(filePath).create(recursive: true);
           await file.writeAsBytes(jpg, flush: true);
@@ -248,14 +262,45 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (internetFound) {
+      return WillPopScope(
+        onWillPop: () => _exitApp(context),
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text(""),
+            toolbarHeight: 0,
+            backgroundColor: Colors.transparent,
+          ),
+          // body: PlatformWebViewWidget(PlatformWebViewWidgetCreationParams(controller: platformController)).build(context),
+          body: WebViewWidget(
+              controller: controller), // This trailing comma makes auto-formatting nicer for build methods.
+        ),);
+    }
+  else{
     return Scaffold(
       appBar: AppBar(
-        title: const Text(""),
-        toolbarHeight: 0,
-        backgroundColor: Colors.transparent,
+        title: const Text("Anystuff.Rent"),
+        backgroundColor: Color(0xFF1D3354),
       ),
-      // body: PlatformWebViewWidget(PlatformWebViewWidgetCreationParams(controller: platformController)).build(context),
-      body: WebViewWidget(controller: controller), // This trailing comma makes auto-formatting nicer for build methods.
+      body: Center(
+          child: ListView(
+            shrinkWrap: true,
+              children:<Widget>[const Text("Internet is mandatory to use this application",
+      textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 25)
+      ),
+          Container( width: 200, child: OutlinedButton(onPressed: check_internet, child: const Text("Retry", style: TextStyle(fontSize: 18))))]
+      ))
     );
+  }
+}
+
+  Future<bool> _exitApp(BuildContext context) async {
+    if (await controller.canGoBack()) {
+      controller.goBack();
+      return Future.value(false);
+    } else {
+      return Future.value(true);
+    }
   }
 }

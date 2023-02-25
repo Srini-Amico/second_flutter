@@ -65,6 +65,6 @@ class DefaultFirebaseOptions {
     storageBucket: 'gpstore-user-app.appspot.com',
     androidClientId: '726203508641-a4km5pnn5si82pc1tg012hfdvnhha0v5.apps.googleusercontent.com',
     iosClientId: '726203508641-k66lj87p963qnvpv4m7lphm4hhnd54l4.apps.googleusercontent.com',
-    iosBundleId: 'com.amico.anystuff',
+    iosBundleId: 'rent.anystuff',
   );
 }

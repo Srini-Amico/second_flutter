@@ -1,4 +1,4 @@
-package com.amico.anystuff
+package rent.anystuff
 
 import io.flutter.embedding.android.FlutterActivity
 
