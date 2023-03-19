@@ -11,9 +11,63 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as image;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  workmanager_init();
   runApp(const MyApp());
+}
+
+
+workmanager_init(){
+  Workmanager().initialize(callbackDispatcher);
+  Workmanager().registerPeriodicTask("anystuff", "order-notification", frequency: Duration(minutes: 15));
+}
+
+callbackDispatcher(){
+Workmanager().executeTask((taskName, inputData) {
+print("callback Dispatcher worked");
+
+FlutterLocalNotificationsPlugin flip = FlutterLocalNotificationsPlugin();
+
+// app_icon needs to be a added as a drawable
+// resource to the Android head project.
+var android = const AndroidInitializationSettings('@mipmap/ic_launcher');
+var iOS = const IOSInitializationSettings();
+
+// initialise settings for both Android and iOS device.
+var settings = InitializationSettings(android: android, iOS: iOS);
+flip.initialize(settings);
+_showNotificationWithDefaultSound(flip);
+return Future.value(true);
+});
+}
+
+Future _showNotificationWithDefaultSound(flip) async {
+
+  // Show a notification after every 15 minute with the first
+  // appearance happening a minute after invoking the method
+  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+      'anystuff',
+      'rent.anystufff',
+      'anystuff.rent',
+      importance: Importance.max,
+      priority: Priority.high
+  );
+  var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+
+  // initialise channel platform for both Android and iOS device.
+  var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    iOS: iOSPlatformChannelSpecifics
+  );
+  print("showing notification");
+  await flip.show(0, 'GeeksforGeeks',
+      'Your are one step away to connect with GeeksforGeeks',
+      platformChannelSpecifics, payload: 'Default_Sound'
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -73,7 +127,10 @@ check_internet();
   }
 
   check_internet() async{
-    // internetFound = await InternetConnectionChecker().hasConnection;
+    var found = await InternetConnectionChecker().hasConnection;
+    setState(() {
+      internetFound = found;
+    });
   }
 
   // flutter_webview_android_init() {
@@ -289,7 +346,7 @@ check_internet();
       textAlign: TextAlign.center,
             style: TextStyle(fontSize: 25)
       ),
-          Container( width: 200, child: OutlinedButton(onPressed: check_internet, child: const Text("Retry", style: TextStyle(fontSize: 18))))]
+          Container( width: 200, child: TextButton(onPressed: check_internet, child: const Text("Retry", style: TextStyle(fontSize: 18))))]
       ))
     );
   }
