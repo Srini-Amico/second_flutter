@@ -44,8 +44,8 @@ dependencies:
   path_provider: ^2.0.12
   image: ^4.0.15
   internet_connection_checker: ^1.0.0+1
-  workmanager: ^0.5.1
-  flutter_local_notifications: ^8.2.0
+  firebase_core: ^2.8.0
+  firebase_messaging: ^14.3.0
 
 dev_dependencies:
   flutter_test:

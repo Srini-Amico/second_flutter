@@ -11,63 +11,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as image;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:workmanager/workmanager.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  workmanager_init();
   runApp(const MyApp());
-}
-
-
-workmanager_init(){
-  Workmanager().initialize(callbackDispatcher);
-  Workmanager().registerPeriodicTask("anystuff", "order-notification", frequency: Duration(minutes: 15));
-}
-
-callbackDispatcher(){
-Workmanager().executeTask((taskName, inputData) {
-print("callback Dispatcher worked");
-
-FlutterLocalNotificationsPlugin flip = FlutterLocalNotificationsPlugin();
-
-// app_icon needs to be a added as a drawable
-// resource to the Android head project.
-var android = const AndroidInitializationSettings('@mipmap/ic_launcher');
-var iOS = const IOSInitializationSettings();
-
-// initialise settings for both Android and iOS device.
-var settings = InitializationSettings(android: android, iOS: iOS);
-flip.initialize(settings);
-_showNotificationWithDefaultSound(flip);
-return Future.value(true);
-});
-}
-
-Future _showNotificationWithDefaultSound(flip) async {
-
-  // Show a notification after every 15 minute with the first
-  // appearance happening a minute after invoking the method
-  var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
-      'anystuff',
-      'rent.anystufff',
-      'anystuff.rent',
-      importance: Importance.max,
-      priority: Priority.high
-  );
-  var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-
-  // initialise channel platform for both Android and iOS device.
-  var platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-    iOS: iOSPlatformChannelSpecifics
-  );
-  print("showing notification");
-  await flip.show(0, 'GeeksforGeeks',
-      'Your are one step away to connect with GeeksforGeeks',
-      platformChannelSpecifics, payload: 'Default_Sound'
-  );
 }
 
 class MyApp extends StatelessWidget {
@@ -105,16 +53,60 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late final FirebaseMessaging _messaging;
+  var fcmToken = "";
   WebViewController controller = WebViewController();
   GoogleSignIn _googleSignIn = GoogleSignIn();
   AndroidWebViewController? myAndroidController;
   Map<String, String> headers = Map();
   bool reload = false;
   bool internetFound = false;
+  bool fcmSent = false;
+
+  void registrationNotification() async {
+    try {
+      await Firebase.initializeApp();
+      _messaging = FirebaseMessaging.instance;
+
+      NotificationSettings settings = await _messaging.requestPermission(
+          alert: true,
+          badge: true,
+          provisional: false,
+          sound: true
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        print("User granted permission");
+        fcmToken = await _messaging.getToken() ?? "";
+        print("fcmToken: ${fcmToken}");
+      } else {
+        print("User declined notification permission");
+        fcmToken = "";
+      }
+
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+    }
+    catch (ex){
+      print("firebase not initialized");
+      print(ex);
+      fcmToken = "";
+    }
+  }
+
+  Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async{
+    print("Handling a background message. ${message}");
+  }
 
   @override
   void initState() {
     // TODO: implement initState
+
+    registrationNotification();
+    FirebaseMessaging.onMessageOpenedApp.listen((event) {
+      print(event);
+    });
+
     super.initState();
 
 check_internet();
@@ -178,7 +170,7 @@ check_internet();
   flutterWebViewInit() {
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse("https://test.anystuff.rent/"))
+      ..loadRequest(Uri.parse("https://test.anystuff.rent"))
       ..setNavigationDelegate(
           NavigationDelegate(
               onProgress: (int progress) {
@@ -188,14 +180,17 @@ check_internet();
                 if (request.url == "about:blank") {
                   return NavigationDecision.prevent;
                 }
-                if (request.url.endsWith("/flutter-login")) {
+                else if (request.url.endsWith("/flutter-login")) {
                   _googleSignIn.signIn().then((value) {
                     value?.authentication.then((value1) async {
+                      print("Access token: ${value1.accessToken}");
+                      print("fcm token: ${fcmToken}");
                       http.post(Uri.parse(
                           "https://test.anystuff.rent/flutter-login"),
                           headers: {"Content-Type": "application/json"},
                           body: jsonEncode(<String, String>{
-                            'accessToken': value1.accessToken!
+                            'accessToken': value1.accessToken!,
+                            'fcmToken': fcmToken
                           })).then((value) async {
                         var body = jsonDecode(value.body);
                         if (value.statusCode == 200 &&
@@ -268,6 +263,20 @@ check_internet();
                     reload = false;
                   }
                 }
+                // else if(!fcmSent && fcmToken != "")
+                // {
+                //   headers = {"sid": "sid123"};
+                //   // print("url: ${request.url}");
+                //   // if(request.url.contains("?")) {
+                //   //   controller.loadRequest(
+                //   //       Uri.parse("${request.url}&fcmToken=${fcmToken}"), headers: headers);
+                //   // }else{
+                //     controller.loadRequest(
+                //         Uri.parse("${request.url}"), headers: headers);
+                //   // }
+                //   // controller.currentUrl().then((value) => print("url1: ${value}"));
+                //   fcmSent = true;
+                // }
                 return NavigationDecision.navigate;
               }
           )
