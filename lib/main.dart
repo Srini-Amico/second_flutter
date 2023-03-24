@@ -143,15 +143,21 @@ check_internet();
               onProgress: (int progress) {
 
               },
-              onNavigationRequest: (NavigationRequest request) {
-                if (request.url == "about:blank") {
+              onNavigationRequest: (NavigationRequest request) async {
+                String? previousUrl = "";
+                await controller.currentUrl().then((value) {
+                  previousUrl = value;
+                });
+                if(previousUrl == request.url){
+                  controller.reload();
+                  return NavigationDecision.prevent;
+                }
+                else if (request.url == "about:blank") {
                   return NavigationDecision.prevent;
                 }
                 else if (request.url.endsWith("/flutter-login")) {
                   _googleSignIn.signIn().then((value) {
                     value?.authentication.then((value1) async {
-                      print("Access token: ${value1.accessToken}");
-                      print("fcm token: ${fcmToken}");
                       http.post(Uri.parse(
                           "https://test.anystuff.rent/flutter-login"),
                           headers: {"Content-Type": "application/json"},
@@ -239,7 +245,6 @@ check_internet();
                       body: jsonEncode(<String, String>{
                         'fcmToken': fcmToken
                       })).then((value){
-                        print(value);
                         print("fcmtoken updated");
                       }).catchError((onError) {
                         print("fcmtoken not updated");
