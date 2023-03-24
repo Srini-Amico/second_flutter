@@ -84,6 +84,15 @@ class _MyHomePageState extends State<MyHomePage> {
         fcmToken = "";
       }
 
+      FirebaseMessaging.onMessage.listen((event) {
+        final String message = event.notification?.body ?? "";
+        var snackBar = SnackBar(
+          content: Text(message),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      });
+
       FirebaseMessaging.onBackgroundMessage(
           _firebaseMessagingBackgroundHandler);
     }
@@ -124,48 +133,6 @@ check_internet();
       internetFound = found;
     });
   }
-
-  // flutter_webview_android_init() {
-  //   platformController..setJavaScriptMode(JavaScriptMode.unrestricted)
-  //     ..setPlatformNavigationDelegate(AndroidNavigationDelegate(
-  //         const PlatformNavigationDelegateCreationParams()
-  //     )..setOnProgress((progress) {
-  //
-  //     })..setOnNavigationRequest((NavigationRequest navigationRequest){
-  //       if(navigationRequest.url.endsWith("/flutter-login")){
-  //         _googleSignIn.signIn().then((value){
-  //
-  //           value?.authentication.then((value1) async {
-  //             http.post(Uri.parse("https://test.anystuff.rent/flutter-login"), headers:{"Content-Type":"application/json"}, body: jsonEncode(<String,String>{
-  //               'accessToken': value1.accessToken!
-  //             })).then((value) async{
-  //               var body = jsonDecode(value.body);
-  //               print(body);
-  //               if(value.statusCode == 200 && body["Status"] == "Success"){
-  //                 // controller.loadRequest(Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]});
-  //                 platformController.loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent"), headers: {"sid":body["sid"]}));
-  //               }
-  //               else if(value.statusCode == 400 && body["message"] == "Invalid Email"){
-  //                 controller.loadRequest(Uri.parse("https://test.anystuff.rent/register"));
-  //               }
-  //               else {
-  //                 print(value);
-  //               }
-  //             }).catchError((onError){
-  //               print(onError);
-  //             });
-  //           }).catchError((onError){
-  //             print(onError);
-  //           });
-  //         }).catchError((onError){
-  //           print(onError);
-  //         });
-  //         return NavigationDecision.prevent;
-  //       }
-  //       return NavigationDecision.navigate;
-  //     }))
-  //     ..loadRequest(LoadRequestParams(uri: Uri.parse("https://test.anystuff.rent")));
-  // }
 
   flutterWebViewInit() {
     controller = WebViewController()
@@ -263,20 +230,21 @@ check_internet();
                     reload = false;
                   }
                 }
-                // else if(!fcmSent && fcmToken != "")
-                // {
-                //   headers = {"sid": "sid123"};
-                //   // print("url: ${request.url}");
-                //   // if(request.url.contains("?")) {
-                //   //   controller.loadRequest(
-                //   //       Uri.parse("${request.url}&fcmToken=${fcmToken}"), headers: headers);
-                //   // }else{
-                //     controller.loadRequest(
-                //         Uri.parse("${request.url}"), headers: headers);
-                //   // }
-                //   // controller.currentUrl().then((value) => print("url1: ${value}"));
-                //   fcmSent = true;
-                // }
+                if(request.url.contains("userid"))
+                {
+                  final Uri uri = Uri.parse(request.url);
+                  final userid = uri.queryParameters["userid"];
+                  http.put(Uri.parse("https://test.anystuff.rent/api/users/update/${userid}"),
+                      headers: {"Content-Type": "application/json"},
+                      body: jsonEncode(<String, String>{
+                        'fcmToken': fcmToken
+                      })).then((value){
+                        print(value);
+                        print("fcmtoken updated");
+                      }).catchError((onError) {
+                        print("fcmtoken not updated");
+                      });
+                }
                 return NavigationDecision.navigate;
               }
           )
@@ -285,18 +253,6 @@ check_internet();
     if (defaultTargetPlatform == TargetPlatform.android) {
       myAndroidController = controller.platform as AndroidWebViewController;
       myAndroidController?.setOnShowFileSelector((params) async {
-        // Control and show your picker
-        // and return a list of Uris.
-        // ImagePicker imagePicker = ImagePicker();
-        // var image = await imagePicker.pickImage(source: ImageSource.gallery);
-        // var imageString = await image?.readAsString(encoding: base64);
-        // print(imageString);
-        // Future<List<String>> uriList = Future(() => [imageString!]);
-        // Future<List<String>> uriList = Future(() => [image!.path]);
-        // String imageString = base64Encode(await image!.readAsBytes());
-        // Future<List<String>> uriList = Future(() => [ "data:image/jpeg;base64,$imageString" ]);
-        // return uriList; // Uris
-
         if (params.acceptTypes.any((type) => type == 'image/*')) {
           final picker = ImagePicker();
           final photo = await picker.pickImage(source: ImageSource.gallery);
