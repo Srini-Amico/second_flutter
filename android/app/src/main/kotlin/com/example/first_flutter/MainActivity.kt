@@ -1,4 +1,4 @@
-package rent.anystuff
+package rent.anystuff.users
 
 import io.flutter.embedding.android.FlutterActivity
 

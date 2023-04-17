@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="rent.anystuff">
+    package="rent.anystuff.users">
    <application
         android:label="Anystuff"
         android:name="${applicationName}"

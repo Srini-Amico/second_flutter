@@ -50,11 +50,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBty7g84mSDhaQAObAdICZMWDcl1qcF1-s',
-    appId: '1:726203508641:android:22fbc40da3f7b9d11b8de0',
-    messagingSenderId: '726203508641',
-    projectId: 'gpstore-user-app',
-    storageBucket: 'gpstore-user-app.appspot.com',
+    apiKey: 'AIzaSyCCJ2SwdVThPHlo-a3EoCAKwD01cBTZomY',
+    appId: '1:803763215837:android:1c52b26cde8ab0afdb6a34',
+    messagingSenderId: '803763215837',
+    projectId: 'anystuff-a2fdd',
+    storageBucket: 'anystuff-a2fdd.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
